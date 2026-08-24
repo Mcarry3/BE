@@ -62,7 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
     private static final ZoneOffset KST_OFFSET = ZoneOffset.ofHours(9);
-    private static final long MINIMUM_JOURNEY_COUNT_FOR_PROVENANCE = 3L;
+    private static final long MINIMUM_JOURNEY_COUNT_FOR_PROVENANCE = 2L;
     private static final List<String> VALID_MAP_ZOOMS = List.of("world", "country", "district");
     private static final String MAP_ZOOM_DEFAULT = "world";
     private static final String MAP_ZOOM_DISTRICT = "district";
