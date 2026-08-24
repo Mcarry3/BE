@@ -1,0 +1,11 @@
+-- MCM-TEST-01~10 official_image_url을 데스크톱 mcm 폴더 1.png~10.png 업로드 결과로 교체
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/6861d0cc-4f35-46d0-b02b-c840eebdf69f.png' WHERE serial_no = 'MCM-TEST-01';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/ccd16e20-a5a0-494b-8006-7bf71cf2738a.png' WHERE serial_no = 'MCM-TEST-02';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/efd6df81-9b4d-484e-b9c0-ecaf87e01222.png' WHERE serial_no = 'MCM-TEST-03';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/e130337e-105a-4c65-82b1-7070a11b5bd7.png' WHERE serial_no = 'MCM-TEST-04';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/33f9b1c3-857c-4cb4-bf23-173743c19429.png' WHERE serial_no = 'MCM-TEST-05';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/b097641e-819a-4e50-8b83-665aa07486ca.png' WHERE serial_no = 'MCM-TEST-06';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/d3317ac8-b269-4b70-8b02-f8826c7a7cf6.png' WHERE serial_no = 'MCM-TEST-07';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/5f2921bf-cd3f-473c-af00-1798a73d4459.png' WHERE serial_no = 'MCM-TEST-08';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/00c02508-d243-49eb-ad53-d116db8806aa.png' WHERE serial_no = 'MCM-TEST-09';
+UPDATE product_master SET official_image_url = 'https://glupshroom.hufsglobalikelion.co.kr/uploads/2026/08/24/3916b62e-4c53-452d-956d-8df9d7840ced.png' WHERE serial_no = 'MCM-TEST-10';

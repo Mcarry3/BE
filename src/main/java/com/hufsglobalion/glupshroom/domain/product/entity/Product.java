@@ -92,6 +92,13 @@ public class Product {
         this.nickname = nickname;
     }
 
+    public void updateProvenance(Integer narrativeScore, BigDecimal conditionCoef, BigDecimal careCoef, Integer provenanceScore) {
+        this.narrativeScore = narrativeScore;
+        this.conditionCoef = conditionCoef;
+        this.careCoef = careCoef;
+        this.provenanceScore = provenanceScore;
+    }
+
     @Builder
     private Product(String passportId, String serialNo, String officialName, String nickname,
                     String officialImageUrl, Integer manufactureYear, String productLine, String color,

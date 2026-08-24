@@ -4,6 +4,7 @@ import com.hufsglobalion.glupshroom.domain.journey.entity.Journey;
 import com.hufsglobalion.glupshroom.domain.journey.repository.JourneyRepository;
 import com.hufsglobalion.glupshroom.domain.product.entity.Product;
 import com.hufsglobalion.glupshroom.domain.product.repository.ProductRepository;
+import com.hufsglobalion.glupshroom.domain.product.service.ProductService;
 import com.hufsglobalion.glupshroom.domain.resell.dto.request.ResellSaveRequest;
 import com.hufsglobalion.glupshroom.domain.resell.dto.request.ResellUpdateRequest;
 import com.hufsglobalion.glupshroom.domain.resell.dto.response.ResellDetailResponse;
@@ -45,6 +46,7 @@ public class ResellService {
     private final ProductRepository productRepository;
     private final JourneyRepository journeyRepository;
     private final UserRepository userRepository;
+    private final ProductService productService;
 
     private static final Set<String> VALID_STATUSES = Set.of("active", "completed");
     private static final Set<String> VALID_ROLES = Set.of("seller", "buyer");
@@ -132,7 +134,7 @@ public class ResellService {
                 .map(resell -> {
                     Product product = productRepository.findById(resell.getProductId()).orElse(null);
                     String nickname = product != null ? product.getOfficialName() : null;
-                    Integer provenanceScore = product != null ? product.getProvenanceScore() : null;
+                    Integer provenanceScore = product != null ? productService.recalculateProvenanceScore(product.getId()) : null;
                     return new ResellListResponse.ResellSummary(
                             resell.getId(),
                             nickname,
@@ -239,7 +241,7 @@ public class ResellService {
         if (product != null && product.getManufactureYear() != null) {
             productAgeYears = LocalDate.now().getYear() - product.getManufactureYear();
         }
-        Integer provenanceScore = product != null ? product.getProvenanceScore() : null;
+        Integer provenanceScore = product != null ? productService.recalculateProvenanceScore(product.getId()) : null;
 
         int verifyRatio = 0;
         if (journeyCount > 0) {

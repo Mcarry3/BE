@@ -26,6 +26,8 @@ import com.hufsglobalion.glupshroom.domain.product.entity.Product;
 import com.hufsglobalion.glupshroom.domain.product.entity.ProductMaster;
 import com.hufsglobalion.glupshroom.domain.product.repository.ProductMasterRepository;
 import com.hufsglobalion.glupshroom.domain.product.repository.ProductRepository;
+import com.hufsglobalion.glupshroom.domain.care.entity.CareDiagnosis;
+import com.hufsglobalion.glupshroom.domain.care.repository.CareDiagnosisRepository;
 import com.hufsglobalion.glupshroom.domain.store.entity.Store;
 import com.hufsglobalion.glupshroom.domain.store.service.StoreService;
 import com.hufsglobalion.glupshroom.domain.transfer.entity.TransferLetter;
@@ -33,6 +35,8 @@ import com.hufsglobalion.glupshroom.domain.transfer.service.TransferService;
 import com.hufsglobalion.glupshroom.domain.user.service.UserService;
 import com.hufsglobalion.glupshroom.global.exception.CustomException;
 import com.hufsglobalion.glupshroom.global.exception.ErrorCode;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -48,6 +52,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DataAccessException;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -72,6 +77,7 @@ public class ProductService {
     private final JourneyService journeyService;
     private final TransferService transferService;
     private final StoreService storeService;
+    private final CareDiagnosisRepository careDiagnosisRepository;
 
     public DigitalPassportResponse getDigitalPassport(Long productId) {
         try {
@@ -214,6 +220,7 @@ public class ProductService {
                 .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
         long journeyCount = journeyService.countJourneys(productId);
+        Integer provenanceScore = recalculateProvenanceScore(productId);
 
         return new ProductSummaryResponse(
                 product.getId(),
@@ -221,10 +228,40 @@ public class ProductService {
                 product.getOfficialName(),
                 product.isAuthenticated(),
                 Math.toIntExact(journeyCount),
-                product.getProvenanceScore(),
-                getProvenanceStatus(product.getProvenanceScore(), journeyCount),
+                provenanceScore,
+                getProvenanceStatus(provenanceScore, journeyCount),
                 Math.toIntExact(ownershipService.countKeepers(productId))
         );
+    }
+
+    // REQUIRES_NEW: 이 메서드를 호출하는 조회 API들이 readOnly 트랜잭션이라, 같은 트랜잭션에 묶이면 update가 반영 안 됨
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Integer recalculateProvenanceScore(Long productId) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return null;
+        }
+
+        long journeyCount = journeyService.countJourneys(productId);
+        if (journeyCount < MINIMUM_JOURNEY_COUNT_FOR_PROVENANCE) {
+            product.updateProvenance(null, null, null, null);
+            return null;
+        }
+
+        long keeperCount = ownershipService.countKeepers(productId);
+        List<CareDiagnosis> diagnoses = careDiagnosisRepository.findByProductIdOrderByGenerationAsc(productId);
+        Integer latestConditionGrade = diagnoses.isEmpty() ? null : diagnoses.get(diagnoses.size() - 1).getConditionGrade();
+
+        int narrativeScore = (int) Math.min(100, journeyCount * 10 + keeperCount * 15);
+        BigDecimal conditionCoef = latestConditionGrade != null
+                ? BigDecimal.valueOf(latestConditionGrade).divide(BigDecimal.valueOf(5), 2, RoundingMode.HALF_UP)
+                : BigDecimal.valueOf(0.70);
+        BigDecimal careCoef = BigDecimal.valueOf(Math.min(1.0, 0.5 + diagnoses.size() * 0.1))
+                .setScale(2, RoundingMode.HALF_UP);
+        int provenanceScore = (int) Math.round(narrativeScore * (conditionCoef.doubleValue() + careCoef.doubleValue()) / 2.0);
+
+        product.updateProvenance(narrativeScore, conditionCoef, careCoef, provenanceScore);
+        return provenanceScore;
     }
 
     @Transactional
