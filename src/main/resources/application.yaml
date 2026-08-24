@@ -33,3 +33,4 @@ app:
     base-url: ${UPLOAD_BASE_URL:http://localhost:8080/uploads}
   repair:
     link-url: ${REPAIR_LINK_URL:https://mcm.com/repair}
+  offline-mode: ${OFFLINE_MODE:false}

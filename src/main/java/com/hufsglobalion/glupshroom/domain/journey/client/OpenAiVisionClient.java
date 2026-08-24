@@ -6,6 +6,7 @@ import com.hufsglobalion.glupshroom.global.exception.ErrorCode;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -29,17 +30,29 @@ public class OpenAiVisionClient {
             {"activityTag": "...", "situationTag": "...", "styleTag": "...", "recallText": "..."}
             """;
 
+    private static final List<VisionAnalysisResult> OFFLINE_PRESETS = List.of(
+            new VisionAnalysisResult("여행", "낯선 도시의 오후", "캐주얼", "낯선 골목을 걷다가 문득 이 순간을 기록하고 싶어졌어요."),
+            new VisionAnalysisResult("출근", "바쁜 아침", "포멀", "분주한 아침, 늘 곁에 있어준 든든한 동반자예요."),
+            new VisionAnalysisResult("데이트", "봄나들이", "캐주얼", "봄바람을 맞으며 걷던 그날의 설렘이 아직 남아있어요."),
+            new VisionAnalysisResult("모임", "친구들과의 저녁", "스트리트", "오랜만에 만난 얼굴들 사이에서 함께한 시간이었어요."),
+            new VisionAnalysisResult("일상", "평범한 하루", "미니멀", "특별할 것 없던 하루도 함께라면 기억할 만한 순간이 돼요."),
+            new VisionAnalysisResult("여행", "바다를 마주한 순간", "미니멀", "파도 소리를 들으며 잠시 모든 걸 내려놓았던 기억이에요.")
+    );
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
     private final String apiKey;
     private final String model;
+    private final boolean offlineMode;
 
     public OpenAiVisionClient(
             @Value("${openai.api-key:}") String apiKey,
-            @Value("${openai.model:gpt-4o-mini}") String model
+            @Value("${openai.model:gpt-4o-mini}") String model,
+            @Value("${app.offline-mode:false}") boolean offlineMode
     ) {
         this.apiKey = apiKey;
         this.model = model;
+        this.offlineMode = offlineMode;
         this.objectMapper = new ObjectMapper();
 
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -49,6 +62,10 @@ public class OpenAiVisionClient {
     }
 
     public VisionAnalysisResult analyze(byte[] imageBytes, String contentType, String tone) {
+        if (offlineMode) {
+            log.info("offline-mode: OpenAI 호출을 건너뛰고 캐시된 여정 분석 결과를 반환합니다");
+            return OFFLINE_PRESETS.get(ThreadLocalRandom.current().nextInt(OFFLINE_PRESETS.size()));
+        }
         try {
             String dataUrl = "data:" + contentType + ";base64," + Base64.getEncoder().encodeToString(imageBytes);
 
